@@ -26,7 +26,8 @@ import hugomatic.toolkit    # the GUI stuff
 import hugomatic.code       # the GCODE routines
 from astro import *
 
-      
+
+# 11.43/2      
 def take_a_break():
     """This function is called when the debug line is printed (if a debug number is specified in the GUI). 
     Use it to print debug information or add a breakpoint in your IDE.
@@ -52,42 +53,48 @@ z_rapid = 0.05
 params.addArgument(z_rapid , 'Rapid Z plane above surface where rapid movements stop', group='setup')                
 
 tool_dia = 0.25
-params.addArgument(tool_dia, 'Tool diameter in Inches', group='setup')    
+params.addArgument(tool_dia, 'End mill diameter in Inches', group='setup')
+tool_z_max = -0.5
+params.addArgument(tool_z_max, 'End mill maximum plunge depth', group='setup')
 
-operation_drill_camera = False
-params.addArgument(operation_drill_camera, 'Drill camera mount screw hole on side', group='Camera')
-drill_dia_camera = 0.1509
-params.addArgument(drill_dia_camera, 'Screw drill diameter for camera mount', group='Camera')      
-
-operation_mirror = False
-params.addArgument(operation_mirror, 'Flip operations for second side', group='side')
-
-z_center_drill = -0.15
 center_drill = True
 params.addArgument(center_drill, 'Center drill before drilling to depth', group='drill')
+z_center_drill = -0.15
 params.addArgument(z_center_drill, 'Center drill z depth', group='drill')
-
-
 drill_dia = 0.1509
 params.addArgument(drill_dia, 'Screw drill diameter #21 for 10-32', group='drill')
-operation_drill_nut = True
-params.addArgument(operation_drill_nut , 'Drill nut joint screw hole', group='drill')
-operation_drill_arm = True
-params.addArgument(operation_drill_arm , 'Drill arm joint screw hole', group='drill')
 
-shoulder = SHOULDER_SIZE
-params.addArgument(shoulder, 'Size of the coupling shoulder', group='couplings')
-dx_recess = RECESS_LENGTH
-params.addArgument(dx_recess, 'Length of the coupling recess', group='couplings')
-z_recess = z_RECESS
-params.addArgument(z_recess, 'Depth of the coupling recess', group='couplings')
-        
-operation_recess_nut = True
-params.addArgument(operation_recess_nut, 'Mill the nut joint recess', group='nut joint')
+operation_drill_camera = False
+params.addArgument(operation_drill_camera, 'Drill camera mount screw hole on side', group='Top')
+drill_dia_camera = 0.1509
+params.addArgument(drill_dia_camera, 'Screw drill diameter for camera mount', group='Top')      
+x_drill_cam = 1.0
+params.addArgument(x_drill_cam, 'Camera mount x position', group='Top')
+operation_mill_shaft_space_left = False
+params.addArgument(operation_mill_shaft_space_left, 'Mill left shaft space', group='Top')
+operation_mill_shaft_space_right = False
+params.addArgument(operation_mill_shaft_space_right, 'Mill right shaft space', group='Top')
+mill_shaft_dx = 0.75
+params.addArgument(mill_shaft_dx, 'Shaft space dx', group='Top')
+mill_shaft_dy = 0.5
+params.addArgument(mill_shaft_dy, 'Shaft space dy', group='Top')
 
 
-operation_recess_arm = True
-params.addArgument(operation_recess_arm, 'Mill the arm joint recess', group='arm joint')
+
+operation_bearings = True
+params.addArgument(operation_bearings , 'Cut ball bearing holes', group='ball bearings')
+x_bb_left = 0.3925
+params.addArgument(x_bb_left , 'Left ball bearing center x', group='ball bearings')
+x_bb_delta =  11.43 /2
+params.addArgument(x_bb_delta , 'Distance between ball bearing centers along x', group='ball bearings')
+y_bb = 0.
+params.addArgument(y_bb , 'Ball bearing y', group='ball bearings')
+bearing_large_dia = 0.5
+params.addArgument(bearing_large_dia , 'ball bearing large diameter', group='ball bearings')
+bearing_small_dia = 0.35
+params.addArgument(bearing_small_dia , 'ball bearing small diameter', group='ball bearings')
+z_bearing_step = -0.20
+params.addArgument(z_bearing_step , 'ball bearing z step', group='ball bearings')
 
 operation_weight = True
 params.addArgument(operation_weight, 'Remove the extra weight', group='Weight')
@@ -98,17 +105,23 @@ params.addArgument(operation_cut_stock_left, 'Cut the left end of stock to 0', g
 operation_cut_stock_right = True
 params.addArgument(operation_cut_stock_right, 'Cut the right end of stock to length', group='stock')
 
-sixty_pc_cut = True
-params.addArgument(sixty_pc_cut, 'Cut stock right to only 60% of stock depth', group='stock')
 
 show_stock_contour = True
 params.addArgument(show_stock_contour, 'Show stock contour in EMC', group='stock')
-dx_stock = 5.5
+dx_stock = 6.5
 params.addArgument(dx_stock, 'Stock length along x', group='stock')
 dy_stock = STOCK_HEIGHT
 params.addArgument(dy_stock, 'Stock height along y', group='stock')
 z_stock = -STOCK_THICK
 params.addArgument(z_stock, 'Stock thickness along z', group='stock')
+
+
+
+def bearing(x,y):
+    z_depth = z_stock
+    if z_depth < tool_z_max:
+         z_depth = tool_z_max
+    bearing_heli(x,y, bearing_large_dia, bearing_small_dia, tool_dia, z_bearing_step, z_depth, z_safe, z_rapid, cut )
 
 
        
@@ -117,78 +130,79 @@ if params.loadParams():  # returns False if the window is closed without pressin
     
     # generate GCODE here!
     hugomatic.code.header(units, feed)   
+    tool_changer = hugomatic.code.ToolChanger(0., 0., 0.,  z_safe)
     
     if operation_drill_camera:
-        x = 0.75
+        
+        x = x_drill_cam
         y = 0.
         if center_drill:
+            tool_changer.change_tool(0.1, 'Center drill', 'center drill')
             peck = 0.1
             z = z_center_drill
-            hugomatic.code.peck_drill(x_drill_arm, 0., z_safe, z_rapid, peck, z, feed)
+            hugomatic.code.peck_drill(x, 0., z_safe, z_rapid, peck, z)
+            
         # this operation requires flipping the stock
         print "(Drilling camera mount hole)"
-        
+        tool_changer.change_tool(drill_dia, '#21 drill', 'drill')
         z = -dy_stock
         peck =  drill_dia_camera * 2
-        hugomatic.code.peck_drill(x, y, z_safe, z_rapid, peck, z, feed)
+        hugomatic.code.peck_drill(x, y, z_safe, z_rapid, peck, z)
+        
+    if operation_mill_shaft_space_left:
+        tool_changer.change_tool(tool_dia, 'flat end mill', 'mill')
+        x0 = -tool_dia
+        x1 = mill_shaft_dx
+        y0 = mill_shaft_dy * -0.5
+        y1 = -y0
+        z = z_stock
+        if z < tool_z_max:
+            z = tool_z_max
+        cuts = hugomatic.code.z_cut_compiler(z, cut)
+        hugomatic.code.pocket_rectangle(x0, y0, x1, y1, z_safe, z_rapid, tool_dia, cuts)
+        
+    if operation_mill_shaft_space_right:
+        tool_changer.change_tool(tool_dia, 'flat end mill', 'mill')
+        x0 = dx_stock - mill_shaft_dx
+        x1 = dx_stock + tool_dia 
+        y0 = mill_shaft_dy * -0.5
+        y1 = -y0
+        z = z_stock
+        if z < tool_z_max:
+            z = tool_z_max
+        cuts = hugomatic.code.z_cut_compiler(z, cut)
+        hugomatic.code.pocket_rectangle(x0, y0, x1, y1, z_safe, z_rapid, tool_dia, cuts)
+    
+    if operation_drill_camera or operation_mill_shaft_space_left or operation_mill_shaft_space_right:
         if show_stock_contour:
             x0 = 0.
             y0 = z_stock * 0.5
             dy = -z_stock
-            z1 = z
+            z1 = -dy_stock
             hugomatic.code.stock(x0, y0,  dx_stock, dy, 0., z1)
+ 
         hugomatic.code.footer()
         exit(0)  
-    
+    # 
+    #
+    # END OF TOP SIDE OPERATIONS
+    #
         
-    tool_changer = hugomatic.code.ToolChanger(0., 0., 0.,  z_safe)
-    x_drill_arm = dx_recess * 0.5
-    x_drill_nut = dx_stock - dx_recess * 0.5
     
-    if center_drill:
-        peck = 0.1
-        if operation_drill_arm: 
-            tool_changer.change_tool(0.1, 'Center drill', 'center drill')
-            hugomatic.code.peck_drill(x_drill_arm, 0., z_safe, z_rapid, peck, z_center_drill)
-        if operation_drill_nut:
-            tool_changer.change_tool(0.1, 'Center drill', 'center drill') 
-            hugomatic.code.peck_drill(x_drill_nut, 0., z_safe, z_rapid, peck, z_center_drill)
-            
-    peck =  drill_dia * 2            
-    if operation_drill_arm:   
-        tool_changer.change_tool(drill_dia, '#21 drill', 'drill')
-        print "(Drilling arm joint mount screw hole)"
-        hugomatic.code.peck_drill(x_drill_arm, 0., z_safe, z_rapid, peck, z_stock)
-        
-    if operation_drill_nut:
-        tool_changer.change_tool(drill_dia, '#21 drill', 'drill')
-        print "(Drilling nut joint mount screw hole)"
-        hugomatic.code.peck_drill(x_drill_nut, 0., z_safe, z_rapid, peck, z_stock)
     
-    if operation_recess_arm:
+    if operation_bearings:      
         tool_changer.change_tool(tool_dia, 'flat end mill', 'mill')
-        cuts = hugomatic.code.z_cut_compiler(z_recess, cut)  # an array of depths
-        x0 = 0.
-        x1 = dx_recess 
-        y0 = -dy_stock * 0.5 
-        y1 = dy_stock * 0.5
-        bottom_left_recess(x0, y0, x1, y1, shoulder, z_safe, z_rapid, tool_changer.diameter, operation_mirror, cuts)
-            
-    if operation_recess_nut:
-        tool_changer.change_tool(tool_dia, 'flat end mill', 'mill')
-        cuts = hugomatic.code.z_cut_compiler(z_recess, cut); # an array of depths
-        x0 = dx_stock - dx_recess 
-        x1 = dx_stock 
-        y0 = -dy_stock * 0.5 
-        y1 = dy_stock * 0.5
-        top_right_recess(x0, y0, x1, y1, shoulder, z_safe, z_rapid, tool_changer.diameter, operation_mirror, cuts)
-   
+        bearing(x_bb_left, y_bb);
+        bearing(x_bb_left + x_bb_delta, y_bb);
+    
+    
+
     
     if operation_weight: # remove extra weight
         margin = 0.1
         tool_rad = tool_dia * 0.5
-        x0 = dx_recess + + margin + tool_rad
-        x1 = dx_stock - dx_recess- margin - tool_rad
+        x0 = mill_shaft_dx + margin + tool_rad
+        x1 = dx_stock - mill_shaft_dx - margin - tool_rad
         y0 = - dy_stock * 0.5 + margin
         y1 = -y0
         z1 = -0.25
@@ -208,8 +222,8 @@ if params.loadParams():  # returns False if the window is closed without pressin
     if operation_cut_stock_right:
         tool_changer.change_tool(tool_dia, 'flat end mill', 'mill')
         z = z_stock
-        if sixty_pc_cut:
-            z = z * 0.6
+        if z < tool_z_max:
+            z = tool_z_max
         cuts = hugomatic.code.z_cut_compiler(z, cut)
         x0 = dx_stock + tool_dia * 0.5
         x1 = x0
