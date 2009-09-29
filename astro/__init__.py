@@ -2,7 +2,7 @@ import hugomatic.code
 
 STOCK_THICK = 0.75 #0.625        #5./8.
 STOCK_HEIGHT= 0.75
-STOCK_THICK_JOINT = 0.25 #0.375  3/8
+#STOCK_THICK_JOINT = 0.25 #0.375  3/8
 
 RECESS_LENGTH = 0.75
 z_RECESS = -0.1

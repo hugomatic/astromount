@@ -55,36 +55,34 @@ params.addArgument(z_rapid , 'Rapid Z plane above surface where rapid movements 
 tool_dia = 0.25
 params.addArgument(tool_dia, 'Tool diameter in Inches', group='setup')    
 
-operation_bearing = True
-params.addArgument(operation_bearing , 'Cut ball bearing holes', group='ball bearing mount')
+operation_drill_shaft_hole = True
+params.addArgument(operation_drill_shaft_hole , 'Drill shaft hole', group='shaft')
 x_center_shaft = 0.375
-params.addArgument(x_center_shaft , 'Center x', group='ball bearing mount')
+params.addArgument(x_center_shaft , 'Center x', group='shaft')
 y_center_shaft = 0.
-params.addArgument(y_center_shaft , 'Center y', group='ball bearing mount')
+params.addArgument(y_center_shaft , 'Center y', group='shaft')
 
-bearing_large_dia = 0.5
-params.addArgument(bearing_large_dia , 'ball bearing large diameter', group='ball bearing mount')
-bearing_small_dia = 0.35
-params.addArgument(bearing_small_dia , 'ball bearing small diameter', group='ball bearing mount')
-z_bearing_step = -0.20
-params.addArgument(z_bearing_step , 'ball bearing z step', group='ball bearing mount')
 
-operation_drill_camera_arm = True
-params.addArgument(operation_drill_camera_arm, 'Drill the camera arm mount hole', group='drill')
 z_center_drill = -0.15
 center_drill = True
 params.addArgument(center_drill, 'Center drill before drilling to depth', group='drill')
 params.addArgument(z_center_drill, 'Center drill z depth', group='drill')
-drill_dia = 0.2
-params.addArgument(drill_dia, 'Screw drill diameter', group='drill')
+drill_shaft_dia = 0.25
+params.addArgument(drill_shaft_dia, 'Shaft drill diameter', group='drill')
 x_cam_mount_hole = x_center_shaft + 0.75
 params.addArgument(x_cam_mount_hole, 'Screw drill hole position along x', group='drill')
 
 operation_screw_cap = False
 #params.addArgument(operation_screw_cap, 'Screw cap hole', group='arm joint')
+operation_recess = True
+params.addArgument(operation_recess, 'Left side recess', group='arm joint')
+z_recess = -0.25
+params.addArgument(z_recess, 'Left side recess final Z (negatif)', group='arm joint')
 
 operation_left_side = True
 params.addArgument(operation_left_side, 'Left side rounded', group='arm joint')
+x_shoulder = 0.5 
+params.addArgument(x_shoulder , 'shoulder length along x measured from shaft center', group='shaft')
 
 operation_cut_stock_right = True
 params.addArgument(operation_cut_stock_right, 'Cut the right end of stock to length', group='stock')
@@ -95,7 +93,7 @@ dx_stock = 1.3
 params.addArgument(dx_stock, 'Stock length along x', group='stock')
 dy_stock = STOCK_HEIGHT
 params.addArgument(dy_stock, 'Stock height along y', group='stock')
-z_stock = -STOCK_THICK_JOINT
+z_stock = -STOCK_HEIGHT
 params.addArgument(z_stock, 'Stock thickness along z', group='stock')
         
         
@@ -107,18 +105,18 @@ if params.loadParams():  # returns False if the window is closed without pressin
     
     tool_changer = hugomatic.code.ToolChanger(0., 0., 0.,  z_safe)
     
-    if operation_drill_camera_arm:
+    if operation_drill_shaft_hole:
 
-        print "(Drilling camera arm mount screw hole)"
-        x = x_cam_mount_hole
+        print "(Drilling shaft hole)"
+        x = x_center_shaft
         y = 0.
         if center_drill:
             peck = 0.1
             tool_changer.change_tool(0.1, 'Center drill', 'center drill')
             hugomatic.code.peck_drill(x, y, z_safe, z_rapid, peck, z_center_drill)
-        tool_changer.change_tool(drill_dia, 'Screw mount drill', 'drill')
-        z = z_stock - drill_dia
-        peck =  drill_dia * 2
+        tool_changer.change_tool(drill_shaft_dia, 'Shaft drill', 'drill')
+        z = z_stock - drill_shaft_dia
+        peck =  drill_shaft_dia * 2
         hugomatic.code.peck_drill(x, y, z_safe, z_rapid, peck, z)
    
     if operation_screw_cap:
@@ -126,20 +124,26 @@ if params.loadParams():  # returns False if the window is closed without pressin
         x = x_cam_mount_hole
         y = 0.
         screwCap1032(x, y, cut, z_safe, z_rapid, -0.20, tool_changer.diameter)
-             
-    if operation_bearing:      
+    
+    if operation_recess:
         tool_changer.change_tool(tool_dia, 'flat end mill', 'mill')
-        #z_bearing_step = -0.25
-        z1 = z_bearing_step
-        x = x_center_shaft
-        y = y_center_shaft
-        bearing_heli(x,y, bearing_large_dia, bearing_small_dia, tool_dia, z_bearing_step, z_stock, z_safe, z_rapid, cut )
-
+        x0 = -tool_dia
+        x1 = x_center_shaft + x_shoulder
+        y0 = -dy_stock / 2 - tool_dia
+        y1 = -y0
+        z = z_recess
+        cuts = hugomatic.code.z_cut_compiler(z, cut)
+        hugomatic.code.pocket_rectangle(x0, y0, x1, y1, z_safe, z_rapid, tool_dia, cuts)
+                 
     if operation_left_side:
         tool_changer.change_tool(tool_dia, 'flat end mill', 'mill')
-        x0 = 0.75
+        x0 =  x_shoulder + x_center_shaft
         y_step = 0.05
-        cuts = hugomatic.code.z_cut_compiler(z_stock, cut)
+        surface = 0.
+        if operation_recess:
+            surface = z_recess
+        cuts = hugomatic.code.z_cut_compiler(z_stock, z_surf = surface, cut = cut)
+       
         contour = TripodLeftSide(x0, dy_stock, y_step, x_center_shaft, y_center_shaft, tool_dia, z_safe, z_rapid)
         contour.cut(cuts) 
 
