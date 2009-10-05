@@ -70,10 +70,10 @@ drill_dia_camera = 0.1509
 params.addArgument(drill_dia_camera, 'Screw drill diameter for camera mount', group='Top')      
 x_drill_cam = 1.0
 params.addArgument(x_drill_cam, 'Camera mount x position', group='Top')
-operation_mill_shaft_space_left = False
-params.addArgument(operation_mill_shaft_space_left, 'Mill left shaft space', group='Top')
-operation_mill_shaft_space_right = False
-params.addArgument(operation_mill_shaft_space_right, 'Mill right shaft space', group='Top')
+operation_mill_shaft_slot_left = False
+params.addArgument(operation_mill_shaft_slot_left, 'Mill left shaft slot', group='Top')
+operation_mill_shaft_slot_right = False
+params.addArgument(operation_mill_shaft_slot_right, 'Mill right shaft slot', group='Top')
 mill_shaft_dx = 0.75
 params.addArgument(mill_shaft_dx, 'Shaft space dx', group='Top')
 mill_shaft_dy = 0.5
@@ -99,8 +99,10 @@ params.addArgument(z_bearing_step , 'ball bearing z step', group='ball bearings'
 operation_weight = True
 params.addArgument(operation_weight, 'Remove the extra weight', group='Weight')
 
-operation_cut_stock_left = True
-params.addArgument(operation_cut_stock_left, 'Cut the left end of stock to 0', group='stock')
+operation_left_side = True
+params.addArgument(operation_left_side, 'Left side rounded', group='left')
+x_shoulder = 0.5 
+params.addArgument(x_shoulder , 'shoulder length along x measured from shaft center', group='left')
 
 operation_cut_stock_right = True
 params.addArgument(operation_cut_stock_right, 'Cut the right end of stock to length', group='stock')
@@ -149,7 +151,7 @@ if params.loadParams():  # returns False if the window is closed without pressin
         peck =  drill_dia_camera * 2
         hugomatic.code.peck_drill(x, y, z_safe, z_rapid, peck, z)
         
-    if operation_mill_shaft_space_left:
+    if operation_mill_shaft_slot_left:
         tool_changer.change_tool(tool_dia, 'flat end mill', 'mill')
         x0 = -tool_dia
         x1 = mill_shaft_dx
@@ -161,7 +163,7 @@ if params.loadParams():  # returns False if the window is closed without pressin
         cuts = hugomatic.code.z_cut_compiler(z, cut)
         hugomatic.code.pocket_rectangle(x0, y0, x1, y1, z_safe, z_rapid, tool_dia, cuts)
         
-    if operation_mill_shaft_space_right:
+    if operation_mill_shaft_slot_right:
         tool_changer.change_tool(tool_dia, 'flat end mill', 'mill')
         x0 = dx_stock - mill_shaft_dx
         x1 = dx_stock + tool_dia 
@@ -173,7 +175,7 @@ if params.loadParams():  # returns False if the window is closed without pressin
         cuts = hugomatic.code.z_cut_compiler(z, cut)
         hugomatic.code.pocket_rectangle(x0, y0, x1, y1, z_safe, z_rapid, tool_dia, cuts)
     
-    if operation_drill_camera or operation_mill_shaft_space_left or operation_mill_shaft_space_right:
+    if operation_drill_camera or operation_mill_shaft_slot_left or operation_mill_shaft_slot_right:
         if show_stock_contour:
             x0 = 0.
             y0 = z_stock * 0.5
@@ -210,14 +212,21 @@ if params.loadParams():  # returns False if the window is closed without pressin
         remove_weight(x0, x1, y0, y1, tool_dia, cut, z_safe, z_rapid, z1, z2)
     
 
-    if operation_cut_stock_left:
+    if operation_left_side:
         tool_changer.change_tool(tool_dia, 'flat end mill', 'mill')
-        cuts = hugomatic.code.z_cut_compiler(z_stock, cut) # z_surf = 0 first_cut = cut, last_cut = cut
-        x0 = 0. - tool_dia * 0.5
-        x1 = x0
-        y0 = dy_stock * 0.5 + tool_dia
-        y1 = -y0
-        hugomatic.code.line(x0, y0, x1, y1, z_safe, z_rapid, cuts)
+        x0 =  x_shoulder + x_bb_left
+        y = 0.
+        y_step = 0.05
+        surface = 0.
+        z_depth = z_stock
+        if z_depth < tool_z_max:
+            z_depth = tool_z_max
+        
+        cuts = hugomatic.code.z_cut_compiler(z_depth, z_surf = surface, cut = cut)      
+        contour = TripodLeftSide(x0, dy_stock, y_step, x_bb_left, y, tool_dia, z_safe, z_rapid)
+        contour.cut(cuts) 
+        
+
 
     if operation_cut_stock_right:
         tool_changer.change_tool(tool_dia, 'flat end mill', 'mill')

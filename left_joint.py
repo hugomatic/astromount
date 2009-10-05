@@ -82,7 +82,7 @@ params.addArgument(z_recess, 'Left side recess final Z (negatif)', group='arm jo
 operation_left_side = True
 params.addArgument(operation_left_side, 'Left side rounded', group='arm joint')
 x_shoulder = 0.5 
-params.addArgument(x_shoulder , 'shoulder length along x measured from shaft center', group='shaft')
+params.addArgument(x_shoulder , 'shoulder length along x measured from shaft center', group='arm joint')
 
 operation_cut_stock_right = True
 params.addArgument(operation_cut_stock_right, 'Cut the right end of stock to length', group='stock')
