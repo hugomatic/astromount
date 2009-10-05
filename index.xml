@@ -1,0 +1,23 @@
+<?xml version="1.0" ?><Hugomatic name="Astromount star tracking ">
+    <Mill>
+        <Folder name="Tools">
+		     <py name="pillow_block.py"/>
+        </Folder>
+        
+        <py name="camera_arm.py"/>
+        <py name="tripod_arm.py"/>
+        
+        <py name="left_joint.py"/>
+        <py name="right_joint.py"/>
+        <Folder name="Jigs">
+            <py name="tool_plate.py"/>
+        </Folder>
+    </Mill>
+    <Turn>
+        <Folder name="Tools">
+            <py name="turn_on.py"/>
+        </Folder>
+    </Turn>
+    
+    
+<Catalog/><Selected>Mill/right_joint.py</Selected></Hugomatic>
