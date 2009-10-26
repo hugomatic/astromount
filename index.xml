@@ -8,7 +8,7 @@
         <py name="tripod_arm.py"/>
         
         <py name="left_joint.py"/>
-        <py name="right_joint.py"/>
+        
         <Folder name="Jigs">
             <py name="tool_plate.py"/>
         </Folder>
@@ -20,4 +20,4 @@
     </Turn>
     
     
-<Catalog/><Selected>Mill/right_joint.py</Selected></Hugomatic>
+<Catalog/><Selected>Mill/left_joint.py</Selected></Hugomatic>
