@@ -26,10 +26,11 @@ import hugomatic.toolkit    # the GUI stuff
 import hugomatic.code       # the GCODE routines
 
       
-def takeAbreak():
+def take_a_break():
     """This function is called when the debug line is printed. Add a breakpoint here
     but don't call print, because the program will go into an infinite loop."""
-    a = 42
+    import sys, traceback
+    traceback.print_stack( file = sys.stdout)
 
 def hole(x, y, zsafe, rapid_plane, peck, z, feed ):
     print "g0 Z%.4f (move tool out of the way)" % z_safe
@@ -162,7 +163,7 @@ class PillowContour(object):
 # Create the Parameters object. It is used to create the GUI and set values in global variables
 params = hugomatic.toolkit.Parameters('Load cell pillow connector', '1.125 stock, origin  is left side, center', 
                                       picture_file="pillow_block.gif", # picture on the left
-                                      debug_callback=takeAbreak)
+                                      debug_callback=take_a_break)
 
 units = "Inches"
 params.addArgument(units,  'Units', choices=("mm","Inches"), group='setup' )
