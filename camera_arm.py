@@ -122,7 +122,7 @@ params.addArgument(z_stock, 'Stock thickness along z', group='stock')
 def bearing(x,y):
     z_depth = z_stock
     if z_depth < tool_z_max:
-         z_depth = tool_z_max
+        z_depth = tool_z_max
     bearing_heli(x,y, bearing_large_dia, bearing_small_dia, tool_dia, z_bearing_step, z_depth, z_safe, z_rapid, cut )
 
 
