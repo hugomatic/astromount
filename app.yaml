@@ -25,6 +25,10 @@ handlers:
   static_files: hugomatic/web/stylesheets/jquery/\1
   upload: hugomatic/web/stylesheets/jquery/(.*\.(css|js))  
 
+- url: /hugomatic/web/stylesheets/canvas/(.*\.(css|js))
+  static_files: hugomatic/web/stylesheets/canvas/\1
+  upload: hugomatic/web/stylesheets/canvas/(.*\.(css|js)) 
+
 - url: /hugomatic/web/stylesheets/jquery/images/(.*\.(gif|png|jpg))
   static_files: hugomatic/web/stylesheets/jquery/images/\1
   upload: hugomatic/web/stylesheets/jquery/images/(.*\.(gif|png|jpg))  
