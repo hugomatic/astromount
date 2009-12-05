@@ -110,17 +110,24 @@ params.addArgument(operation_cut_stock_right, 'Cut the right end of stock to len
 
 show_stock_contour = True
 params.addArgument(show_stock_contour, 'Show stock contour in EMC', group='stock')
+
+x0_stock = 0.
+params.addArgument(x0_stock, 'Stock origin along x', group='stock')
+y0_stock = -0.5 * STOCK_HEIGHT
+params.addArgument(y0_stock, 'Stock origin along y', group='stock')
+z0_stock = 0.
+params.addArgument(z0_stock, 'Stock origin along z', group='stock')
 dx_stock = 6.5
 params.addArgument(dx_stock, 'Stock length along x', group='stock')
 dy_stock = STOCK_HEIGHT
 params.addArgument(dy_stock, 'Stock height along y', group='stock')
-z_stock = -STOCK_THICK
-params.addArgument(z_stock, 'Stock thickness along z', group='stock')
+dz_stock = -STOCK_THICK
+params.addArgument(dz_stock, 'Stock thickness along z', group='stock')
 
 
 
 def bearing(x,y):
-    z_depth = z_stock
+    z_depth = dz_stock
     if z_depth < tool_z_max:
         z_depth = tool_z_max
     bearing_heli(x,y, bearing_large_dia, bearing_small_dia, tool_dia, z_bearing_step, z_depth, z_safe, z_rapid, cut )
@@ -157,7 +164,7 @@ if params.loadParams():  # returns False if the window is closed without pressin
         x1 = mill_shaft_dx
         y0 = mill_shaft_dy * -0.5
         y1 = -y0
-        z = z_stock
+        z = dz_stock
         if z < tool_z_max:
             z = tool_z_max
         cuts = hugomatic.code.z_cut_compiler(z, cut)
@@ -169,7 +176,7 @@ if params.loadParams():  # returns False if the window is closed without pressin
         x1 = dx_stock + tool_dia 
         y0 = mill_shaft_dy * -0.5
         y1 = -y0
-        z = z_stock
+        z = dz_stock
         if z < tool_z_max:
             z = tool_z_max
         cuts = hugomatic.code.z_cut_compiler(z, cut)
@@ -178,8 +185,8 @@ if params.loadParams():  # returns False if the window is closed without pressin
     if operation_drill_camera or operation_mill_shaft_slot_left or operation_mill_shaft_slot_right:
         if show_stock_contour:
             x0 = 0.
-            y0 = z_stock * 0.5
-            dy = -z_stock
+            y0 = dz_stock * 0.5
+            dy = -dz_stock
             z1 = -dy_stock
             hugomatic.code.stock(x0, y0,  dx_stock, dy, 0., z1)
  
@@ -208,7 +215,7 @@ if params.loadParams():  # returns False if the window is closed without pressin
         y0 = - dy_stock * 0.5 + margin
         y1 = -y0
         z1 = -0.25
-        z2 = z_stock * 0.55
+        z2 = dz_stock * 0.55
         remove_weight(x0, x1, y0, y1, tool_dia, cut, z_safe, z_rapid, z1, z2)
     
 
@@ -218,7 +225,7 @@ if params.loadParams():  # returns False if the window is closed without pressin
         y = 0.
         y_step = 0.05
         surface = 0.
-        z_depth = z_stock
+        z_depth = dz_stock
         if z_depth < tool_z_max:
             z_depth = tool_z_max
         
@@ -230,7 +237,7 @@ if params.loadParams():  # returns False if the window is closed without pressin
 
     if operation_cut_stock_right:
         tool_changer.change_tool(tool_dia, 'flat end mill', 'mill')
-        z = z_stock
+        z = dz_stock
         if z < tool_z_max:
             z = tool_z_max
         cuts = hugomatic.code.z_cut_compiler(z, cut)
@@ -242,7 +249,7 @@ if params.loadParams():  # returns False if the window is closed without pressin
 
         
     if show_stock_contour:
-        hugomatic.code.stock(0, -dy_stock * 0.5,  dx_stock, dy_stock, 0., z_stock)
+        hugomatic.code.stock(0, -dy_stock * 0.5,  dx_stock, dy_stock, 0., dz_stock)
 
         
     hugomatic.code.footer()
