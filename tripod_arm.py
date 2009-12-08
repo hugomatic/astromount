@@ -78,11 +78,11 @@ params.addArgument(operation_joint_hole, 'Drill joint hole', group='top side')
 x_joint_hole = 0.5 * dx_recess_arm
 
 operation_mill_motor_slot_right = False
-params.addArgument(operation_mill_motor_slot_right, 'Mill right motor slot', group='Top')
+params.addArgument(operation_mill_motor_slot_right, 'Mill right motor slot', group='top side')
 motor_slot_dx = 0.75
-params.addArgument(motor_slot_dx, 'Motor slot dx', group='Top')
+params.addArgument(motor_slot_dx, 'Motor slot dx', group='top side')
 mill_shaft_dy = 0.5
-params.addArgument(mill_shaft_dy, 'Motor slot dy', group='Top')
+params.addArgument(mill_shaft_dy, 'Motor slot dy', group='top side')
 
 
 params.addArgument(z_center_drill, 'Center drill z depth', group='drill')
