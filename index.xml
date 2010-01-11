@@ -3,7 +3,10 @@
         <Folder name="Tools">
 		     <py name="pillow_block.py"/>
         </Folder>
-        
+	
+
+
+	<py name="arduino_enclosure.py"/>        
         <py name="camera_arm.py"/>
         <py name="tripod_arm.py"/>
         
